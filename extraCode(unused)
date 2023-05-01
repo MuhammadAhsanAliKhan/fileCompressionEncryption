@@ -1,0 +1,364 @@
+// package main
+// import (
+// 	// "crypto"
+//     "archive/zip"
+// 	"crypto/rand"
+//     "fmt"
+//     "io"
+// 	// "io/ioutil"
+//     "os"
+//     "path/filepath"
+// 	// fernet "github.com/fernet/fernet-go"
+// )
+
+// type Key [32]byte
+
+// func main() {
+// 	// Zip our folder
+//     zipSource("work", "example.zip")
+
+
+// 	// Generate a key for encryption
+// 	key := make([]byte, 32)
+//     _, err := rand.Read(key)
+//     if err != nil {
+//         fmt.Println("Failed to generate key:", err)
+//         return
+//     }
+
+
+// 	// Encrypt our zip folder
+// 	// encryptFile("example.zip", key)
+// }
+
+
+// func zipSource(source, target string) error {
+//     // 1. Create a ZIP file and zip.Writer
+//     f, err := os.Create(target)
+//     if err != nil {
+//         return err
+//     }
+//     defer f.Close()
+
+//     writer := zip.NewWriter(f)
+//     defer writer.Close()
+
+//     // 2. Go through all the files of the source
+//     return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+//         if err != nil {
+//             return err
+//         }
+
+//         // 3. Create a local file header
+//         header, err := zip.FileInfoHeader(info)
+//         if err != nil {
+//             return err
+//         }
+
+//         // set compression
+//         header.Method = zip.Deflate
+
+//         // 4. Set relative path of a file as the header name
+//         header.Name, err = filepath.Rel(filepath.Dir(source), path)
+//         if err != nil {
+//             return err
+//         }
+//         if info.IsDir() {
+//             header.Name += "/"
+//         }
+
+//         // 5. Create writer for the file header and save content of the file
+//         headerWriter, err := writer.CreateHeader(header)
+//         if err != nil {
+//             return err
+//         }
+
+//         if info.IsDir() {
+//             return nil
+//         }
+
+//         f, err := os.Open(path)
+//         if err != nil {
+//             return err
+//         }
+//         defer f.Close()
+
+//         _, err = io.Copy(headerWriter, f)
+//         return err
+//     })
+// }
+
+// // Encrypts a file with a given key and saves the encrypted data to a new file
+// func encryptFile(filePath string, key []byte) error {
+//     // Read the contents of the file
+//     data, err := ioutil.ReadFile(filePath)
+//     if err != nil {
+//         return err
+//     }
+
+//     // Encrypt the data with the key
+// 	// k := fernet.MustDecodeKeys(string(key))
+// 	// encryptedData, err := fernet.EncryptAndSign(data, k[0])
+// 	// if err != nil {
+// 	// 	panic(err)
+// 	// }
+//     encryptedData := make([]byte, len(data))
+//     f := crypto.
+// 	f.Encrypt(encryptedData, data)
+
+//     // Save the encrypted data to a new file
+//     encryptedFilePath := filePath + ".encrypted"
+//     err = ioutil.WriteFile(encryptedFilePath, encryptedData, 0644)
+//     if err != nil {
+//         return err
+//     }
+
+//     return nil
+// }
+
+// package main
+
+// import (
+//     "archive/zip"
+//     // "io"
+//     "io/ioutil"
+//     "os"
+//     "path/filepath"
+// 	"crypto/rand"
+//     "github.com/fernet/fernet-go"
+// )
+
+// func main() {
+//     // Generate a key for encryption
+//     key := make([]byte, 32)
+//     _, err := rand.Read(key)
+//     if err != nil {
+//         panic(err)
+//     }
+
+//     // Set the path of the folder you want to zip and encrypt
+//     folderPath := "Testing"
+
+//     // Set the name of the output zip file
+//     zipName := "encrypted_folder.zip"
+
+//     // Create a new zip file and add the contents of the folder to it
+//     zipFile, err := os.Create(zipName)
+//     if err != nil {
+//         panic(err)
+//     }
+//     defer zipFile.Close()
+//     zipWriter := zip.NewWriter(zipFile)
+//     defer zipWriter.Close()
+//     err = filepath.Walk(folderPath, func(filePath string, fileInfo os.FileInfo, err error) error {
+//         if err != nil {
+//             return err
+//         }
+//         if fileInfo.IsDir() {
+//             return nil
+//         }
+//         fileBytes, err := ioutil.ReadFile(filePath)
+//         if err != nil {
+//             return err
+//         }
+//         zipFilePath, err := filepath.Rel(folderPath, filePath)
+//         if err != nil {
+//             return err
+//         }
+//         zipEntry, err := zipWriter.Create(zipFilePath)
+//         if err != nil {
+//             return err
+//         }
+//         _, err = zipEntry.Write(fileBytes)
+//         return err
+//     })
+//     if err != nil {
+//         panic(err)
+//     }
+
+//     // Read the contents of the zip file and encrypt it
+//     data, err := ioutil.ReadFile(zipName)
+//     if err != nil {
+//         panic(err)
+//     }
+//     f := fernet.MustNew(key)
+//     encryptedData := f.Encrypt(data)
+
+//     // Write the encrypted data to a new file
+//     encryptedZipName := "encrypted_" + zipName
+//     err = ioutil.WriteFile(encryptedZipName, encryptedData, 0644)
+//     if err != nil {
+//         panic(err)
+//     }
+
+//     // Remove the original unencrypted zip file
+//     err = os.Remove(zipName)
+//     if err != nil {
+//         panic(err)
+//     }
+
+//     // Save the encryption key to a file
+//     keyFilename := "encryption_key.key"
+//     err = ioutil.WriteFile(keyFilename, key.Encode(), 0644)
+//     if err != nil {
+//         panic(err)
+//     }
+// }
+
+// package main
+
+// import (
+// 	"archive/zip"
+// 	// "bytes"
+// 	"crypto/aes"
+// 	"crypto/cipher"
+// 	"crypto/rand"
+// 	"io"
+// 	"io/ioutil"
+// 	"os"
+// )
+
+// // generateKey generates a new random AES key.
+// func generateKey() ([]byte, error) {
+// 	key := make([]byte, 32)
+// 	if _, err := rand.Read(key); err != nil {
+// 		return nil, err
+// 	}
+// 	return key, nil
+// }
+
+// // encryptData encrypts the given data with the given key using AES-256 encryption.
+// func encryptData(data []byte, key []byte) ([]byte, error) {
+// 	block, err := aes.NewCipher(key)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	nonce := make([]byte, 12)
+// 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+// 		return nil, err
+// 	}
+// 	aesgcm, err := cipher.NewGCM(block)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	ciphertext := aesgcm.Seal(nil, nonce, data, nil)
+// 	encryptedData := make([]byte, 0, len(nonce)+len(ciphertext))
+// 	encryptedData = append(encryptedData, nonce...)
+// 	encryptedData = append(encryptedData, ciphertext...)
+// 	return encryptedData, nil
+// }
+
+// func main() {
+// 	// Generate a key for encryption
+// 	key, err := generateKey()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// Set the path of the folder you want to zip and encrypt
+// 	folderPath := "work"
+
+// 	// Set the name of the output zip file
+// 	zipName := "folder.zip"
+
+// 	// Create a new zip file and add the contents of the folder to it
+// 	zipFile, err := os.Create(zipName)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer zipFile.Close()
+
+// 	archive := zip.NewWriter(zipFile)
+// 	defer archive.Close()
+
+// 	files, err := ioutil.ReadDir(folderPath)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	for _, file := range files {
+// 		if file.IsDir() {
+// 			continue
+// 		}
+// 		fileContent, err := ioutil.ReadFile(folderPath + "/" + file.Name())
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		fileWriter, err := archive.Create(file.Name())
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		_, err = fileWriter.Write(fileContent)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 	}
+
+// 	// Read the contents of the zip file and encrypt it
+// 	data, err := ioutil.ReadFile(zipName)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	encryptedData, err := encryptData(data, key)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// Write the encrypted data to a new file
+// 	err = ioutil.WriteFile("encrypted_"+zipName, encryptedData, 0644)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// // Remove the original unencrypted zip file
+// 	// err = os.Remove(zipName)
+// 	// if err != nil {
+// 	// 	panic(err)
+// 	// }
+
+// 	// Save the encryption key to a file
+// 	err = ioutil.WriteFile("encryption_key.key", key, 0644)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
+
+
+
+//---------------------------------------------------------------------------------------------
+
+
+	
+
+	// // Open a new zip archive for reading the decrypted data
+	// zipReader, err := zip.NewReader(bytes.NewReader(decryptedData), int64(len(decryptedData)))
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// // Extract the contents of the zip archive
+	// for _, file := range zipReader.File {
+	// 	if file.FileInfo().IsDir() {
+	// 		continue
+	// 	}
+
+	// 	fileReader, err := file.Open()
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	defer fileReader.Close()
+
+	// 	fileContent, err := ioutil.ReadAll(fileReader)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	err = ioutil.WriteFile(file.Name, fileContent, 0644)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
+
+
