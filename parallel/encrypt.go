@@ -153,8 +153,6 @@ func EncryptFileP(key []byte, zipName string) error {
     }
 
 }
-
-
 // decryptFile decrypts the given encrypted file with the given key and writes the decrypted contents to a new file.
 func DecryptFileP(key []byte) error {
  

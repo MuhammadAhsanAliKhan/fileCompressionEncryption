@@ -176,20 +176,26 @@ func main() {
 
 	
 
-	start2 := time.Now()
+	// start2 := time.Now()
 
-	// Encrypt 'zipName.zip' to encypted.zip
-	encryptFile(key, zipName)
+	// // Encrypt 'zipName.zip' to encypted.zip
+	// encryptFile(key, zipName)
 
-	// Decrypt encypted.zip to decrypted.zip
-	//decryptFile(key)
-	log.Printf("main, execution time %s\n", time.Since(start2))	
+	// // Decrypt encypted.zip to decrypted.zip
+	// decryptFile(key)
+	// log.Printf("main, execution time %s\n", time.Since(start2))	
+
+
 
 	start := time.Now()
 
 	// Encrypt 'zipName.zip' to encypted.zip
 	parallel.EncryptFileP(key, zipName)
-
+	//Decrypt encypted.zip to decrypted.zip
+	err = parallel.DecryptFileP(key)
+	if err != nil {
+		panic(err)
+	}
 	log.Printf("main, execution time %s\n", time.Since(start))
 
 

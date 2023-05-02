@@ -1,0 +1,17 @@
+12345678910 in bytes (file format)
+
+12 34 56 78 910 
+
+102 304 506 708 9010 encrypted 
+
+304 506 102 9010 708 encrpted data unordered
+
+
+
+struct { data= 304 , index =1}
+
+array of struct [struct0, struct1]
+
+for i in range structarray{
+
+struct.data (ab jo data read hoga, wo ordered hoga)
