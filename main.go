@@ -7,10 +7,10 @@ import (
 	"crypto/rand"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"project/parallel"
-	"log"
-    "time"
+	"time"
 )
 
 // generateKey generates a new random AES key.
@@ -174,16 +174,23 @@ func main() {
 	// Zip folder to 'zipName.zip'
 	zipSource(folderPath, zipName)
 
+	
+
+	start2 := time.Now()
+
+	// Encrypt 'zipName.zip' to encypted.zip
+	encryptFile(key, zipName)
+
+	// Decrypt encypted.zip to decrypted.zip
+	//decryptFile(key)
+	log.Printf("main, execution time %s\n", time.Since(start2))	
+
 	start := time.Now()
 
 	// Encrypt 'zipName.zip' to encypted.zip
 	parallel.EncryptFileP(key, zipName)
 
-	// Decrypt encypted.zip to decrypted.zip
-	err = parallel.DecryptFileP(key)
-	if err != nil {
-		panic(err)
-	}
-
 	log.Printf("main, execution time %s\n", time.Since(start))
+
+
 }

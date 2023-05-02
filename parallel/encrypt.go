@@ -1,15 +1,15 @@
 package parallel
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
 	"io/ioutil"
 	"os"
-	"sync"
-	"bufio"
 	"runtime"
+	"sync"
 )
 
 // a struct to hold index and data chunk
@@ -20,6 +20,8 @@ type Chunk struct {
 
 // make global array for order of chunks and chunk size
 var order []int
+
+var abbasiOrder[101]Chunk
 var chunkSize int
 
 // encryptDataP encrypts the given data with the given key using AES-256 encryption using goroutines.
@@ -45,7 +47,9 @@ func EncryptDataP(data Chunk, key []byte, wg *sync.WaitGroup, encryptedData chan
     }
 
     ciphertext := aesgcm.Seal(nil, nonce, data.data , nil)
+    //println("This is before chiper",len(data.data))
     data.data= append(nonce, ciphertext...)
+    //println("This is after chiper",(len(data.data)))
     encryptedData <- data
 }
 
@@ -83,9 +87,6 @@ func EncryptFileP(key []byte, zipName string) error {
     if err != nil {
         return err
     }
-	// log.Println(len(zipFile))
-	// log.Println(256*256)
-    // Create a new encrypted file
     encryptedFile, err := os.Create("encryptedP.zip")
     if err != nil {
         return err
@@ -103,17 +104,20 @@ func EncryptFileP(key []byte, zipName string) error {
 
     // Encrypt the data in chunks using goroutines
     numChunks := runtime.NumCPU()
-    print("numChunks: ", numChunks)
-    chunkSize = len(zipFile) / numChunks
-	print("len(zipFile): ", len(zipFile))
+    println("numChunks: ", numChunks)
+    chunkSize = len(zipFile) / 100
+	println("len(zipFile): ", len(zipFile))
+    count := 0
     for i := 0; i < len(zipFile); i += chunkSize {
+        
         wg.Add(1)
         end := i + chunkSize
         if end > len(zipFile) {
             end = len(zipFile)
         }
         // make encrypted chunk object and send it to channel
-        c := Chunk{index: i, data: zipFile[i:end]}
+        c := Chunk{index: count, data: zipFile[i:end]}
+        count++
         go EncryptDataP(c, key, &wg, encryptedData, errCh)
     }
 
@@ -126,8 +130,15 @@ func EncryptFileP(key []byte, zipName string) error {
     // Write the encrypted data to the encrypted file
     writer := bufio.NewWriter(encryptedFile)
     for encryptedChunk := range encryptedData {
-        _, err := writer.Write(encryptedChunk.data)
-        order = append(order, encryptedChunk.index)
+
+        if err != nil {
+            return err
+        }
+        abbasiOrder[encryptedChunk.index] = encryptedChunk
+    }
+
+    for i := range abbasiOrder{
+        _, err := writer.Write(abbasiOrder[i].data)
         if err != nil {
             return err
         }
@@ -140,51 +151,18 @@ func EncryptFileP(key []byte, zipName string) error {
     default:
         return nil
     }
+
 }
 
 
 // decryptFile decrypts the given encrypted file with the given key and writes the decrypted contents to a new file.
 func DecryptFileP(key []byte) error {
-    encryptedFile, err := os.Open("encryptedP.zip")
+ 
+    dat, err := os.ReadFile("encryptedP.zip")
     if err != nil {
         return err
     }
-    defer encryptedFile.Close()
-
-    encryptedFileInfo, err := encryptedFile.Stat()
-    if err != nil {
-        return err
-    }
-
-    encryptedData := make([]byte, encryptedFileInfo.Size())
-    if _, err := encryptedFile.Read(encryptedData); err != nil {
-        return err
-    }
-
-    decryptData := make([]byte, chunkSize*len(order)) 
-
-    // Make a new array to store encrypted data in order
-    encryptDataOrdered := make([]byte, len(encryptedData))
-    for i := 0; i < len(order)-1; i++ {
-        for j := 0; j < chunkSize; j++ {
-            encryptDataOrdered[i*chunkSize+j] = encryptedData[order[i]+j]
-        }
-    }
-
-    // Decrypt the data in chunks using simple function
-    chunkSize = chunkSize+12
-  
-    for i := 0; i < len(encryptDataOrdered); i += chunkSize {
-        end := i + chunkSize
-        if end > len(encryptDataOrdered) {
-            end = len(encryptDataOrdered)
-        }
-        data, err:= DecryptDataP(encryptDataOrdered[i:end], key)
-        if err != nil {
-            return err
-        }
-        copy(decryptData[i:i+chunkSize], data)
-    }
+    chunkSize = chunkSize+28
 
     decryptedFile, err := os.Create("decryptedP.zip")
     if err != nil {
@@ -194,9 +172,19 @@ func DecryptFileP(key []byte) error {
 
     // Write the decrypted data to the decrypted file
     writer := bufio.NewWriter(decryptedFile)
-    if _, err := writer.Write(decryptData); err != nil {
-        return err
+
+    for i := 0; i < len(dat); i += chunkSize {
+        end := i + chunkSize
+        if end > len(dat) {
+            end = len(dat)
+        }
+        data, err:= DecryptDataP(dat[i:end], key)
+        if err != nil {
+            return err
+        }
+        _, err = writer.Write(data)
     }
+  
     writer.Flush()
 
     return nil
