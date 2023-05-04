@@ -4,23 +4,18 @@ import (
 	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
-
-	// "crypto/rand"
 	"io"
-	// "io/ioutil"
 	"os"
-	// "runtime"
-	// "sync"
 )
 
 // decryptFile decrypts the given encrypted file with the given key and writes the decrypted contents to a new file.
-func DecryptFileP(key []byte) error {
+func DecryptFileP(key []byte, size int) error {
  
     dat, err := os.ReadFile("..\\encryptedP.zip")
     if err != nil {
         return err
     }
-    ChunkSize = 487+28
+    ChunkSize = (size/100)+28
 
     decryptedFile, err := os.Create("decryptedP.zip")
     if err != nil {

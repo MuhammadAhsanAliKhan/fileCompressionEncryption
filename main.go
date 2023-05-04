@@ -11,6 +11,7 @@ import (
 	"os"
 	"project/parallel"
 	"time"
+	"encoding/binary"
 )
 
 // generateKey generates a new random AES key.
@@ -165,7 +166,7 @@ func main() {
 		panic(err)
 	}
 
-	key = []byte{164, 251, 124, 160, 192, 76, 167, 99, 197, 62, 83, 81, 98, 17, 42, 11, 209, 147, 211, 24, 160, 49, 82, 62, 163, 137, 218, 18, 113, 122, 57, 100}
+	// key = []byte{164, 251, 124, 160, 192, 76, 167, 99, 197, 62, 83, 81, 98, 17, 42, 11, 209, 147, 211, 24, 160, 49, 82, 62, 163, 137, 218, 18, 113, 122, 57, 100}
 
 	//Set the path of the folder you want to zip and encrypt
 	folderPath := "work2"
@@ -176,8 +177,6 @@ func main() {
 	//Zip folder to 'zipName.zip'
 	zipSource(folderPath, zipName)
 
-	
-
 	// start2 := time.Now()
 
 	// // Encrypt 'zipName.zip' to encypted.zip
@@ -186,8 +185,6 @@ func main() {
 	// // Decrypt encypted.zip to decrypted.zip
 	// decryptFile(key)
 	// log.Printf("main, execution time %s\n", time.Since(start2))	
-
-
 
 	start := time.Now()
 
@@ -203,5 +200,29 @@ func main() {
 	log.Println("Done")
 	log.Println(key)
 	println("Type of this object is %T\n", key)
-	println(parallel.ChunkSize)
+	println(parallel.FileSize)
+
+	// create meta data file
+	file, err := os.Create("dycryptMain/metaData.key")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	// write key to file
+	_, err = file.Write(key)
+	if err != nil {
+		panic(err)
+	}
+
+	// convert file size to byte
+	size := make([]byte, 4)
+	binary.LittleEndian.PutUint32(size, uint32(parallel.FileSize))
+
+	// write file size to file
+	err = binary.Write(file, binary.LittleEndian, size)
+	if err != nil {
+		// panic(err)
+	}
+
 }
