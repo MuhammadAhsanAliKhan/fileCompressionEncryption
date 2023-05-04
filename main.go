@@ -159,19 +159,21 @@ func decryptFile(key []byte) {
 
 
 func main() {
-	// Generate a key for encryption
+	//Generate a key for encryption
 	key, err := generateKey()
 	if err != nil {
 		panic(err)
 	}
 
-	// Set the path of the folder you want to zip and encrypt
-	folderPath := "work"
+	key = []byte{164, 251, 124, 160, 192, 76, 167, 99, 197, 62, 83, 81, 98, 17, 42, 11, 209, 147, 211, 24, 160, 49, 82, 62, 163, 137, 218, 18, 113, 122, 57, 100}
 
-	// Set the name of the output zip file
+	//Set the path of the folder you want to zip and encrypt
+	folderPath := "work2"
+
+	//Set the name of the output zip file
 	zipName := "folder.zip"
 
-	// Zip folder to 'zipName.zip'
+	//Zip folder to 'zipName.zip'
 	zipSource(folderPath, zipName)
 
 	
@@ -189,14 +191,17 @@ func main() {
 
 	start := time.Now()
 
-	// Encrypt 'zipName.zip' to encypted.zip
+	//Encrypt 'zipName.zip' to encypted.zip
 	parallel.EncryptFileP(key, zipName)
-	//Decrypt encypted.zip to decrypted.zip
-	err = parallel.DecryptFileP(key)
-	if err != nil {
-		panic(err)
-	}
+	
+	// //Decrypt encypted.zip to decrypted.zip
+	// err = parallel.DecryptFileP(key)
+	// if err != nil {
+	// 	panic(err)
+	// }
 	log.Printf("main, execution time %s\n", time.Since(start))
-
-
+	log.Println("Done")
+	log.Println(key)
+	println("Type of this object is %T\n", key)
+	println(parallel.ChunkSize)
 }

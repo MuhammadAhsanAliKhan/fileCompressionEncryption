@@ -22,7 +22,7 @@ type Chunk struct {
 var order []int
 
 var abbasiOrder[101]Chunk
-var chunkSize int
+var ChunkSize int
 
 // encryptDataP encrypts the given data with the given key using AES-256 encryption using goroutines.
 func EncryptDataP(data Chunk, key []byte, wg *sync.WaitGroup, encryptedData chan Chunk, errCh chan error) {
@@ -53,33 +53,33 @@ func EncryptDataP(data Chunk, key []byte, wg *sync.WaitGroup, encryptedData chan
     encryptedData <- data
 }
 
-// decryptDataP decrypts the given data with the given key using AES-256 encryption using goroutines.
-func DecryptDataP(encryptedData []byte, key []byte) ([]byte, error) {
+// // decryptDataP decrypts the given data with the given key using AES-256 encryption using goroutines.
+// func DecryptDataP(encryptedData []byte, key []byte) ([]byte, error) {
 
-    block, err := aes.NewCipher(key)
-    if err != nil {
-        return nil, err
-    }
+//     block, err := aes.NewCipher(key)
+//     if err != nil {
+//         return nil, err
+//     }
 
-    if len(encryptedData) < aes.BlockSize {
-        return  nil, io.ErrUnexpectedEOF
-    }
+//     if len(encryptedData) < aes.BlockSize {
+//         return  nil, io.ErrUnexpectedEOF
+//     }
 
-    nonce := encryptedData[:12]
-    ciphertext := encryptedData[12:]
+//     nonce := encryptedData[:12]
+//     ciphertext := encryptedData[12:]
 
-    aesgcm, err := cipher.NewGCM(block)
-    if err != nil {
-        return nil, err
-    }
+//     aesgcm, err := cipher.NewGCM(block)
+//     if err != nil {
+//         return nil, err
+//     }
 
-    plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
-    if err != nil {
-        return  nil, err
-    }
+//     plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+//     if err != nil {
+//         return  nil, err
+//     }
 
-    return plaintext, nil
-}
+//     return plaintext, nil
+// }
 
 func EncryptFileP(key []byte, zipName string) error {
     // Read the contents of the zip file
@@ -105,13 +105,13 @@ func EncryptFileP(key []byte, zipName string) error {
     // Encrypt the data in chunks using goroutines
     numChunks := runtime.NumCPU()
     println("numChunks: ", numChunks)
-    chunkSize = len(zipFile) / 100
+    ChunkSize = len(zipFile) / 100
 	println("len(zipFile): ", len(zipFile))
     count := 0
-    for i := 0; i < len(zipFile); i += chunkSize {
+    for i := 0; i < len(zipFile); i += ChunkSize {
         
         wg.Add(1)
-        end := i + chunkSize
+        end := i + ChunkSize
         if end > len(zipFile) {
             end = len(zipFile)
         }
@@ -143,6 +143,7 @@ func EncryptFileP(key []byte, zipName string) error {
             return err
         }
     }
+    
     writer.Flush()
     // Check for any errors during encryption
     select {
@@ -153,37 +154,37 @@ func EncryptFileP(key []byte, zipName string) error {
     }
 
 }
-// decryptFile decrypts the given encrypted file with the given key and writes the decrypted contents to a new file.
-func DecryptFileP(key []byte) error {
+// // decryptFile decrypts the given encrypted file with the given key and writes the decrypted contents to a new file.
+// func DecryptFileP(key []byte) error {
  
-    dat, err := os.ReadFile("encryptedP.zip")
-    if err != nil {
-        return err
-    }
-    chunkSize = chunkSize+28
+//     dat, err := os.ReadFile("encryptedP.zip")
+//     if err != nil {
+//         return err
+//     }
+//     ChunkSize = ChunkSize+28
 
-    decryptedFile, err := os.Create("decryptedP.zip")
-    if err != nil {
-        return err
-    }
-    defer decryptedFile.Close()
+//     decryptedFile, err := os.Create("decryptedP.zip")
+//     if err != nil {
+//         return err
+//     }
+//     defer decryptedFile.Close()
 
-    // Write the decrypted data to the decrypted file
-    writer := bufio.NewWriter(decryptedFile)
+//     // Write the decrypted data to the decrypted file
+//     writer := bufio.NewWriter(decryptedFile)
 
-    for i := 0; i < len(dat); i += chunkSize {
-        end := i + chunkSize
-        if end > len(dat) {
-            end = len(dat)
-        }
-        data, err:= DecryptDataP(dat[i:end], key)
-        if err != nil {
-            return err
-        }
-        _, err = writer.Write(data)
-    }
+//     for i := 0; i < len(dat); i += ChunkSize {
+//         end := i + ChunkSize
+//         if end > len(dat) {
+//             end = len(dat)
+//         }
+//         data, err:= DecryptDataP(dat[i:end], key)
+//         if err != nil {
+//             return err
+//         }
+//         _, err = writer.Write(data)
+//     }
   
-    writer.Flush()
+//     writer.Flush()
 
-    return nil
-}
+//     return nil
+// }
