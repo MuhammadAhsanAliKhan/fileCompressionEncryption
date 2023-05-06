@@ -1,9 +1,9 @@
 package main
 
 import (
-	"project/parallel"
+	"encoding/binary"
 	"os"
-    "encoding/binary"
+	"project/parallel"
 )
 
 
